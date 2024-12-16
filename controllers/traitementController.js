@@ -36,7 +36,7 @@ exports.assignCourrier = async (req, res) => {
 // Ajouter ou mettre à jour un commentaire
 exports.addComment = async (req, res) => {
     const { id } = req.params;
-    const { commentaire } = req.body;
+    const { commentaire, urlsPj } = req.body;
 
     try {
         // Vérifie si le traitement existe
@@ -48,7 +48,10 @@ exports.addComment = async (req, res) => {
         // Met à jour le commentaire
         const updatedTraitement = await prisma.traitement.update({
             where: { id: parseInt(id) },
-            data: { commentaire },
+            data: {
+                commentaire,
+                urlsPj
+            },
         });
 
         res.status(200).json({ message: "Commentaire mis à jour avec succès", updatedTraitement });

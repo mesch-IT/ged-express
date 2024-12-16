@@ -59,6 +59,7 @@ model Employee {
 model Traitement {
   id             Int    @id @default(autoincrement())
   commentaire     String?
+  urlsPj        String[]        @default([])
   employeeId      Int
   Employee       Employee   @relation(fields: [employeeId], references: [id])
   courrierId       Int
