@@ -117,3 +117,25 @@ exports.delete = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la suppression du courrier', error });
     }
 };
+
+// Fonction pour changer le statut d'un courrier en "Clôturé"
+exports.closeCourrier = async (req, res) => {
+    const { courrierId } = req.params; // Récupère l'ID du courrier depuis les paramètres de l'URL
+
+    try {
+        const updatedCourrier = await prisma.courrier.update({
+            where: { id: Number(courrierId) }, // Filtre par l'ID du courrier
+            data: { statut: 'Clôturé' }, // Met à jour le statut en "Clôturé"
+        });
+
+        res.status(200).json({
+            message: 'Statut du courrier mis à jour en Clôturé',
+            courrier: updatedCourrier,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: 'Erreur lors de la mise à jour du statut du courrier',
+            error,
+        });
+    }
+};

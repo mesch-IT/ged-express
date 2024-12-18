@@ -64,6 +64,8 @@ exports.update = async (req, res) => {
     const { id } = req.params;
     const { nom, prenom, fonction, telephone, email, role, password } = req.body;
 
+    let hashPassword = await bcrypt.hash(password, 10);
+
     try {
         const updatedEmployee = await prisma.employee.update({
             where: { id: parseInt(id) },
@@ -74,7 +76,7 @@ exports.update = async (req, res) => {
                 telephone,
                 email,
                 role,
-                password,
+                password:hashPassword,
             },
         });
 

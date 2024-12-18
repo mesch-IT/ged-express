@@ -18,6 +18,12 @@ exports.assignCourrier = async (req, res) => {
             return res.status(404).json({ message: "Employé introuvable ou supprimé" });
         }
 
+        // Met à jour le statut du courrier à "En cours"
+        await prisma.courrier.update({
+            where: { id: courrierId },
+            data: { statut: "En cours" },
+        });
+
         // Crée un enregistrement dans Traitement
         const traitement = await prisma.traitement.create({
             data: {
@@ -33,30 +39,30 @@ exports.assignCourrier = async (req, res) => {
     }
 };
 
+
 // Ajouter ou mettre à jour un commentaire
 exports.addComment = async (req, res) => {
-    const { id } = req.params;
-    const { commentaire, urlsPj } = req.body;
+    const { commentaire, urlsPj,employeeId,idCourrier } = req.body;
 
     try {
-        // Vérifie si le traitement existe
-        const traitement = await prisma.traitement.findUnique({ where: { id: parseInt(id) } });
-        if (!traitement) {
-            return res.status(404).json({ message: "Traitement introuvable" });
-        }
-
-        // Met à jour le commentaire
-        const updatedTraitement = await prisma.traitement.update({
-            where: { id: parseInt(id) },
+       
+        const addComment = await prisma.traitement.create({
             data: {
-                commentaire,
-                urlsPj
+                commentaire, // Le champ commentaire reste simple
+                urlsPj: urlsPj || [], // Par défaut à une liste vide si aucun n'est fourni
+                Courrier: {
+                    connect: { id: idCourrier }
+                }, 
+                Employee: {
+                    connect: { id: employeeId }
+                }
             },
+
         });
 
-        res.status(200).json({ message: "Commentaire mis à jour avec succès", updatedTraitement });
+        res.status(200).json({ message: "Commentaire ajouté avec succès",addComment });
     } catch (error) {
-        res.status(500).json({ message: "Erreur lors de la mise à jour du commentaire", error });
+        res.status(500).json({ message: "Erreur lors de l'ajout du commentaire", error });
     }
 };
 
@@ -98,3 +104,65 @@ exports.getById = async (req, res) => {
         res.status(500).json({ message: "Erreur lors de la récupération du traitement", error });
     }
 };
+
+// Obtenir les courriers assignés à un employé
+exports.getAssignedCourriersByEmployee = async (req, res) => {
+    const { employeeId } = req.params;
+
+    try {
+        // Récupérer tous les traitements de l'employé
+        const traitements = await prisma.traitement.findMany({
+            where: { employeeId: parseInt(employeeId) },
+            include: {
+                Courrier: true, // Détails du courrier assigné
+            },
+            orderBy: { createdAt: "desc" } // Trie par date de création
+        });
+
+        // Filtrer les doublons en utilisant un Set pour les IDs des courriers
+        const courriersUniques = [];
+        const idsCourriers = new Set();
+
+        traitements.forEach(traitement => {
+            const courrier = traitement.Courrier;
+            if (!idsCourriers.has(courrier.id)) {
+                idsCourriers.add(courrier.id); // Ajoute l'ID au Set
+                courriersUniques.push(courrier); // Ajoute le courrier unique
+            }
+        });
+
+        res.status(200).json({
+            message: "Courriers assignés récupérés avec succès",
+            courriers: courriersUniques
+        });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des courriers assignés :", error);
+        res.status(500).json({ message: "Erreur serveur", error });
+    }
+};
+
+
+
+exports.getTraitementsByCourrier = async (req, res) => {
+    const { courrierId } = req.params;
+
+    try {
+        // Récupérer tous les traitements liés au courrier avec les employés et les détails du courrier
+        const traitements = await prisma.traitement.findMany({
+            where: {
+                courrierId: parseInt(courrierId),
+            },
+            include: {
+                Courrier: true, // Inclut les détails du courrier
+                Employee: true, // Inclut les détails des employés
+            },
+        });
+
+        res.status(200).json(traitements);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la récupération des traitements", error });
+    }
+};
+
+
+
