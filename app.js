@@ -7,6 +7,7 @@ const userRoutes = require('./routes/userRoute')
 const courrierRoutes = require('./routes/courrierRoute')
 const employeeRoutes = require('./routes/employeeRoute')
 const traitementRoutes = require('./routes/traitementRoute')
+const dossierRoutes = require('./routes/dossierRoute')
 
 
 
@@ -26,6 +27,7 @@ app.use("/api", userRoutes);
 app.use("/api", courrierRoutes);
 app.use("/api", employeeRoutes);
 app.use("/api", traitementRoutes);
+app.use("/api", dossierRoutes); 
 
 
 checkDatabaseConnection().then(() => { 

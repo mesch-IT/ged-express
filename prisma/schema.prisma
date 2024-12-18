@@ -36,7 +36,8 @@ model Courrier {
   updatedAt      DateTime @updatedAt
   userId         Int
   User           User   @relation(fields: [userId], references: [id])
-
+  dossierId  Int?     // ID du dossier auquel le courrier est lié
+  dossier    Dossier? @relation(fields: [dossierId], references: [id])
   Traitement Traitement[]
 }
 
@@ -67,4 +68,15 @@ model Traitement {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model Dossier {
+  id          Int       @id @default(autoincrement())
+  name        String    // Nom du dossier
+  parentId    Int?      // ID du dossier parent (null pour les dossiers racines)
+  parent      Dossier?  @relation("ParentChild", fields: [parentId], references: [id])
+  children    Dossier[] @relation("ParentChild") // Relation avec les sous-dossiers
+  courriers   Courrier[] // Liste des courriers classés dans ce dossier
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+} 
 
