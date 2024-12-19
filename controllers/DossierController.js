@@ -40,6 +40,13 @@ exports.linkCourrierToDossier = async (req, res) => {
             return res.status(404).json({ error: "Dossier introuvable." });
         }
 
+        // Vérifie si le courrier est déjà lié à un dossier
+        if (courrier.dossierId) {
+            return res.status(400).json({
+                error: "Le courrier est déjà lié à un dossier.",
+            });
+        }
+
         // Met à jour le courrier pour lier le dossier
         const updatedCourrier = await prisma.courrier.update({
             where: { id: parseInt(courrierId) },
@@ -49,9 +56,12 @@ exports.linkCourrierToDossier = async (req, res) => {
         res.status(200).json(updatedCourrier);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Erreur lors de l'association du courrier au dossier." });
+        res.status(500).json({
+            error: "Erreur lors de l'association du courrier au dossier.",
+        });
     }
 };
+
 
 
 
@@ -60,8 +70,17 @@ exports.getDossiers = async (req,res) => {
         const dossiers = await prisma.dossier.findMany({
             where: { parentId: null }, // Récupère uniquement les dossiers racines
             include: {
-                children: true, // Inclut les sous-dossiers
-                courriers: true, // Inclut les courriers
+                children: {
+                    include: {
+                        courriers: true, // Inclut les courriers des sous-dossiers
+                        children: {      // Inclut les sous-dossiers de manière récursive
+                            include: {
+                                courriers: true,
+                            },
+                        },
+                    },
+                },
+                courriers: true, // Inclut les courriers des dossiers racines
             },
         });
         res.status(200).json(dossiers);

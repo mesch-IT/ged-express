@@ -32,6 +32,7 @@ model Courrier {
   prenom_expediteur String
   telephone_expediteur String
   statut            String    @default("En attente")
+  keywords          String[]  @default([])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   userId         Int
